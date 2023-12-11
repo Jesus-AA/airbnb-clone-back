@@ -11,8 +11,8 @@ import morgan from 'morgan';
 import { UserModel } from './entities/user.js';
 
 const app = express();
-app.use(cors());
 app.use(cookieParser());
+app.use(cors({ credentials: true }));
 app.use(morgan('dev'));
 app.use(express.json());
 
@@ -58,28 +58,31 @@ app.post('/login', async (req, res) => {
 				}
 			);
 		} else {
-			res.json('Error');
+			res.status(422).json('Error');
 		}
 	} else {
 		res.json('notFound');
 	}
 });
 
-app.listen(4000);
-
 app.get('/profile', (req, res) => {
 	const { token } = req.cookies;
 	if (token) {
-		jwt.verify(token, jwtSecret, {}, (err, user) => {
+		jwt.verify(token, jwtSecret, {}, async (err, userData) => {
 			if (err) {
 				throw err;
 			}
 
-			res.json(user);
+			const { name, email, _id } = await UserModel.findById(userData.id);
+			res.json({ name, email, _id });
 		});
 	} else {
 		res.json(null);
 	}
-
-	res.json('User info');
 });
+
+app.post('/logout', (req, res) => {
+	res.cookie('token', '').json(true);
+});
+
+app.listen(4000);
