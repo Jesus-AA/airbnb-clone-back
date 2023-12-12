@@ -5,9 +5,13 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import 'dotenv/config';
 import express from 'express';
+import 'image-downloader';
+import { image } from 'image-downloader';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import morgan from 'morgan';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { UserModel } from './entities/user.js';
 
 const app = express();
@@ -83,6 +87,19 @@ app.get('/profile', (req, res) => {
 
 app.post('/logout', (req, res) => {
 	res.cookie('token', '').json(true);
+});
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.post('/upload-by-link', async (req, res) => {
+	const { link } = req.body;
+	const newName = Date.now() + '.jpg';
+	await image({
+		url: link,
+		dest: __dirname + '/uploads/' + newName,
+	});
+	res.json(__dirname + '/uploads/' + newName);
 });
 
 app.listen(4000);
