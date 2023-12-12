@@ -10,12 +10,17 @@ import { image } from 'image-downloader';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import morgan from 'morgan';
+import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { UserModel } from './entities/user.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 app.use(cookieParser());
+app.use('/uploads', express.static(__dirname + '/uploads'));
 app.use(cors({ credentials: true }));
 app.use(morgan('dev'));
 app.use(express.json());
@@ -89,17 +94,20 @@ app.post('/logout', (req, res) => {
 	res.cookie('token', '').json(true);
 });
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 app.post('/upload-by-link', async (req, res) => {
 	const { link } = req.body;
-	const newName = Date.now() + '.jpg';
+	const newName = 'photo' + Date.now() + '.jpg';
 	await image({
 		url: link,
 		dest: __dirname + '/uploads/' + newName,
 	});
-	res.json(__dirname + '/uploads/' + newName);
+	res.json(newName);
+});
+
+const photosMiddleware = multer({ dest: 'uploads' });
+
+app.post('/upload', photosMiddleware.array('photos', 100), (req, res) => {
+	res.json(req.files);
 });
 
 app.listen(4000);
