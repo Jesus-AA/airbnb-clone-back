@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import 'dotenv/config';
 import express from 'express';
+import fs from 'fs';
 import 'image-downloader';
 import { image } from 'image-downloader';
 import jwt from 'jsonwebtoken';
@@ -104,10 +105,22 @@ app.post('/upload-by-link', async (req, res) => {
 	res.json(newName);
 });
 
-const photosMiddleware = multer({ dest: 'uploads' });
+const photosMiddleware = multer({ dest: 'src/uploads/' });
 
 app.post('/upload', photosMiddleware.array('photos', 100), (req, res) => {
-	res.json(req.files);
+	const uploadedFiles = [];
+	for (let i = 0; i < req.files.length; i++) {
+		const { path, originalname } = req.files[i];
+		const parts = originalname.split('.');
+		const ext = parts[parts.length - 1];
+		const newPath = path + '.' + ext;
+
+		fs.renameSync(path, newPath);
+
+		uploadedFiles.push(newPath.replace('src\\uploads\\', ''));
+	}
+
+	res.json(uploadedFiles);
 });
 
 app.listen(4000);
