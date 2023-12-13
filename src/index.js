@@ -14,6 +14,7 @@ import morgan from 'morgan';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { PlaceModel } from './entities/place.js';
 import { UserModel } from './entities/user.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -22,7 +23,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(cookieParser());
 app.use('/uploads', express.static(__dirname + '/uploads'));
-app.use(cors({ credentials: true }));
+app.use(cors({ credentials: true, origin: 'https://aibnbclone.netlify.app' }));
 app.use(morgan('dev'));
 app.use(express.json());
 
@@ -63,7 +64,10 @@ app.post('/login', async (req, res) => {
 					if (err) {
 						throw err;
 					} else {
-						res.cookie('token', token).json(loginUser);
+						console.log(token);
+						res
+							.cookie('token', token, { httpOnly: false, secure: true, sameSite: 'none' })
+							.send(loginUser);
 					}
 				}
 			);
@@ -121,6 +125,43 @@ app.post('/upload', photosMiddleware.array('photos', 100), (req, res) => {
 	}
 
 	res.json(uploadedFiles);
+});
+
+app.post('/places', (req, res) => {
+	const { token } = req.cookies;
+	console.log(req);
+	console.log('TOKEN', token);
+	const {
+		title,
+		address,
+		addedPhotos,
+		description,
+		perks,
+		extraInfo,
+		checkIn,
+		checkOut,
+		maxGuests,
+	} = req.body;
+
+	jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+		if (err) {
+			throw err;
+		}
+
+		const placeDoc = await PlaceModel.create({
+			owner: userData.id,
+			title,
+			address,
+			addedPhotos,
+			description,
+			perks,
+			extraInfo,
+			checkIn,
+			checkOut,
+			maxGuests,
+		});
+		res.json(placeDoc);
+	});
 });
 
 app.listen(4000);
