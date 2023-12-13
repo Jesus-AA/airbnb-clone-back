@@ -12,6 +12,7 @@ const PlaceSchema = new Schema({
 	checkIn: Number,
 	checkOut: Number,
 	maxGuests: Number,
+	price: Number,
 });
 
 export const PlaceModel = model('Place', PlaceSchema, 'places');
