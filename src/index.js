@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable operator-linebreak */
 /* eslint-disable arrow-parens */
 /* eslint-disable comma-dangle */
@@ -31,17 +32,21 @@ app.use(morgan('dev'));
 app.use(express.json());
 
 mongoose.connect(process.env.MONGO_URL);
-const jwtSecret = 'kdnfadjkfnkdfndskfnds90fsdjfdsf';
 
 function getUserDataFromRequest(req) {
 	return new Promise((resolve, reject) => {
-		jwt.verify(req.cookies.token, jwtSecret, {}, async (err, userData) => {
-			if (err) {
-				throw err;
-			}
+		jwt.verify(
+			req.cookies.token,
+			process.env.jwtSecret,
+			{},
+			async (err, userData) => {
+				if (err) {
+					throw err;
+				}
 
-			resolve(userData);
-		});
+				resolve(userData);
+			}
+		);
 	});
 }
 
@@ -73,7 +78,7 @@ app.post('/login', async (req, res) => {
 		if (passOk) {
 			jwt.sign(
 				{ email: loginUser.email, id: loginUser._id },
-				jwtSecret,
+				process.env.jwtSecret,
 				{},
 				(err, token) => {
 					if (err) {
@@ -96,7 +101,7 @@ app.post('/login', async (req, res) => {
 app.get('/profile', (req, res) => {
 	const { token } = req.cookies;
 	if (token) {
-		jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+		jwt.verify(token, process.env.jwtSecret, {}, async (err, userData) => {
 			if (err) {
 				throw err;
 			}
@@ -159,7 +164,7 @@ app.post('/places', (req, res) => {
 		price,
 	} = req.body;
 
-	jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+	jwt.verify(token, process.env.jwtSecret, {}, async (err, userData) => {
 		if (err) {
 			throw err;
 		}
@@ -183,7 +188,7 @@ app.post('/places', (req, res) => {
 
 app.get('/user-places', (req, res) => {
 	const { token } = req.cookies;
-	jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+	jwt.verify(token, process.env.jwtSecret, {}, async (err, userData) => {
 		const { id } = userData;
 		res.json(await PlaceModel.find({ owner: id }));
 	});
@@ -211,7 +216,7 @@ app.put('/places', async (req, res) => {
 		price,
 	} = req.body;
 
-	jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+	jwt.verify(token, process.env.jwtSecret, {}, async (err, userData) => {
 		if (err) {
 			throw err;
 		}
