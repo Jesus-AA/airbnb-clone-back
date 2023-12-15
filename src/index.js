@@ -79,7 +79,6 @@ app.post('/login', async (req, res) => {
 					if (err) {
 						throw err;
 					} else {
-						console.log(token);
 						res
 							.cookie('token', token, { httpOnly: false, secure: true, sameSite: 'none' })
 							.send(loginUser);
@@ -111,7 +110,9 @@ app.get('/profile', (req, res) => {
 });
 
 app.post('/logout', (req, res) => {
-	res.cookie('token', '').json(true);
+	res
+		.cookie('token', '', { httpOnly: false, secure: true, sameSite: 'none' })
+		.json(true);
 });
 
 app.post('/upload-by-link', async (req, res) => {
