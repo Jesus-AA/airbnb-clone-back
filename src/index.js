@@ -1,3 +1,5 @@
+/* eslint-disable operator-linebreak */
+/* eslint-disable arrow-parens */
 /* eslint-disable comma-dangle */
 /* eslint-disable object-curly-spacing */
 import bcrypt from 'bcrypt';
@@ -14,6 +16,7 @@ import morgan from 'morgan';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { BookingModel } from './entities/booking.js';
 import { PlaceModel } from './entities/place.js';
 import { UserModel } from './entities/user.js';
 
@@ -29,6 +32,18 @@ app.use(express.json());
 
 mongoose.connect(process.env.MONGO_URL);
 const jwtSecret = 'kdnfadjkfnkdfndskfnds90fsdjfdsf';
+
+function getUserDataFromRequest(req) {
+	return new Promise((resolve, reject) => {
+		jwt.verify(req.cookies.token, jwtSecret, {}, async (err, userData) => {
+			if (err) {
+				throw err;
+			}
+
+			resolve(userData);
+		});
+	});
+}
 
 app.get('/test', (req, res) => {
 	res.json('test ok');
@@ -222,6 +237,33 @@ app.put('/places', async (req, res) => {
 
 app.get('/places', async (req, res) => {
 	res.json(await PlaceModel.find());
+});
+
+app.post('/bookings', async (req, res) => {
+	const userData = await getUserDataFromRequest(req);
+	const { place, checkIn, checkOut, numberOgGuests, name, phone, price } =
+		req.body;
+	BookingModel.create({
+		user: userData.id,
+		place,
+		checkIn,
+		checkOut,
+		numberOgGuests,
+		name,
+		phone,
+		price,
+	})
+		.then((doc) => {
+			res.json(doc);
+		})
+		.catch((err) => {
+			throw err;
+		});
+});
+
+app.get('/bookings', async (req, res) => {
+	const userData = await getUserDataFromRequest(req);
+	res.json(await BookingModel.find({ user: userData.id }).populate('place'));
 });
 
 app.listen(4000);
